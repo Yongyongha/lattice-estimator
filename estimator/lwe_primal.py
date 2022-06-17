@@ -357,7 +357,9 @@ class PrimalHybrid:
 
         if mitm and zeta > 0:
             if babai:
-                probability *= mitm_babai_probability(r, params.Xe.stddev, params.q)
+                # TODO: optimize the computation of this probability
+                # probability *= mitm_babai_probability(r, params.Xe.stddev, params.q)
+                probability *= 1
             else:
                 # TODO: the probability in this case needs to be analysed
                 probability *= 1
