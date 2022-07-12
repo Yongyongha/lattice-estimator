@@ -238,6 +238,43 @@ class MITM:
     def local_range(self, center):
         return ZZ(floor((1 - self.locality) * center)), ZZ(ceil((1 + self.locality) * center))
 
+    def my_mitm(self, params: LWEParameters, success_probability = 0.99):
+
+        from sage.all import erf, sqrt, exp, pi, binomial
+
+        m = params.m
+        n = params.n
+
+        nd_rng, nd_p = self.X_range(params.Xe)
+        alphaq = sigmaf(params.Xe.stddev)
+
+        sd_rng, sd_p = self.X_range(params.Xs)
+        box_size = params.q / 2
+
+        if params.Xs.is_sparse and sd_rng == 3:
+            h = params.Xs.get_hamming_weight(n=params.n)
+            half_h = h // 2
+            if h % 2 == 1: 
+                half_h += 1
+            N = binomial(n, half_h) * 2**h # Number of list
+            t = log2((N-1)/2) # sub-dimension
+            p_adm = RR(erf(box_size * sqrt(RR(pi)) / alphaq)
+                + (alphaq / box_size) * ((exp(-box_size * sqrt(RR(pi)) / alphaq) - 1) / RR(pi))) # prob_good
+            logp_good = log2(p_adm) * t
+            logp_bad = - t # prob_bad
+
+            FD_cost = h * m # Fourier Distinguisher cost: Computing b - As requires h vector addition
+            logT = log2(3) + log2(binomial(N, 2))  + logp_bad - logp_good + log2(FD_cost)
+        else:
+            raise NotImplementedError(
+                f"MITM: Only Implemented for sparse ternary secret."
+            )
+
+        prob_unit = 0.95 # TODO: multiply with FD_prob
+        ret = Cost(rop=RR(2 ** logT), mem = N, m=m)
+        repeat = prob_amplify(success_probability, prob_unit)
+        return ret.repeat(times=repeat)
+
     def mitm_analytical(self, params: LWEParameters, success_probability=0.99):
         nd_rng, nd_p = self.X_range(params.Xe)
         delta = nd_rng / params.q  # possible error range scaled
@@ -380,6 +417,8 @@ class MITM:
                 # is not correct. Interestingly, in these cases, it seems that k=1 might be smallest
                 ret1 = self.cost(k=1, params=params, success_probability=success_probability)
                 return min(ret, ret1)
+        elif "lsh" in optimization:
+            return self.my_mitm(params=params, success_probability=success_probability)
         else:
             raise ValueError("Unknown optimization method for MITM.")
 

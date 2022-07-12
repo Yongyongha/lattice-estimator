@@ -13,3 +13,7 @@ class InsufficientSamplesError(ValueError):
     """
 
     pass
+
+class NotImplementedError(ValueError):
+
+    pass

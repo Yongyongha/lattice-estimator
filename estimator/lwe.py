@@ -63,6 +63,9 @@ class Estimate:
             algorithms["dual_mitm_hybrid"] = partial(
                 dual_hybrid, red_cost_model=RC.ADPS16, mitm_optimization=True
             )
+            algorithms["dual_mitm_lsh"] = partial(
+                dual_hybrid, red_cost_model=RC.ADPS16, mitm_optimization="lsh"
+            )
         else:
             algorithms["dual_hybrid"] = partial(
                 dual_hybrid, red_cost_model=RC.ADPS16, mitm_optimization=False
