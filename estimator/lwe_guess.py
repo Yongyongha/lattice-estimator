@@ -242,16 +242,15 @@ class MITM:
 
         from sage.all import erf, sqrt, exp, pi, binomial
 
-        m = params.m
         n = params.n
+        m = min(params.m, n)
 
-        nd_rng, nd_p = self.X_range(params.Xe)
         alphaq = sigmaf(params.Xe.stddev)
 
-        sd_rng, sd_p = self.X_range(params.Xs)
+        sd_rng, _ = self.X_range(params.Xs)
         box_size = params.q / 2
 
-        if params.Xs.is_sparse and sd_rng == 3:
+        if sd_rng == 3:
             h = params.Xs.get_hamming_weight(n=params.n)
             half_h = h // 2
             if h % 2 == 1: 
@@ -264,7 +263,7 @@ class MITM:
             logp_bad = - t # prob_bad
 
             FD_cost = h * m # Fourier Distinguisher cost: Computing b - As requires h vector addition
-            logT = log2(3) + log2(binomial(N, 2))  + logp_bad - logp_good + log2(FD_cost)
+            logT = log2(3) + log2(binomial(N, 2)) + logp_bad - logp_good + log2(FD_cost)
         else:
             raise NotImplementedError(
                 f"MITM: Only Implemented for sparse ternary secret."
